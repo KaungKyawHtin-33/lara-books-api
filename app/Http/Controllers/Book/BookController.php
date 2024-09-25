@@ -33,11 +33,20 @@ class BookController extends Controller
                     'publisher'     => $book->publisher->name,
                     'genre'         => $book->genre->name,
                     'published_at'  => $book->published_at,
-                    'authors'       => $book->authors->pluck('name'),
                     'categories'    => $book->categories->pluck('name'),
+                    'authors'       => $book->authors->map(function ($author) {
+                        return [
+                            'name'      => $author->name,
+                            'country'   => $author->country->name
+                        ];
+                    })
                 ];
             });
-        return $books;
+
+        return response()->json([
+            'books'     => $books,
+            'message'   => 'Show all books'
+        ], 200);
     }
 
     /**
@@ -51,7 +60,7 @@ class BookController extends Controller
             $file->storeAs("public/books/{$image_name}");
         }
 
-        $book = $request->except('authors', 'categories');
+        $book = $request->safe()->except('authors', 'categories');
         $book['image_path'] = $image_name;
         $book = Book::create($book);
         $book->authors()->attach($request->authors);
@@ -72,6 +81,7 @@ class BookController extends Controller
             abort(404);
         }
 
+        # Eager loading for N+1 query
         $book->load(['publisher', 'genre', 'authors', 'categories']);
 
         $book = [
@@ -85,8 +95,13 @@ class BookController extends Controller
             'publisher'     => $book->publisher->name,
             'genre'         => $book->genre->name,
             'published_at'  => $book->published_at,
-            'authors'       => $book->authors->pluck('name'),
             'categories'    => $book->categories->pluck('name'),
+            'authors'       => $book->authors->map(function ($author) {
+                return [
+                    'name'      => $author->name,
+                    'country'   => $author->country->name
+                ];
+            })
         ];
 
         return response()->json([
@@ -106,12 +121,13 @@ class BookController extends Controller
 
         if ($request->validated('image_path') && $request->hasFile('image_path')) {
             $file = $request->file('image_path');
+
             $image_name = 'book_' . uniqid() . '_' . time() . '.' . $file->extension();
             $file->storeAs("public/books/{$image_name}");
             $book['image_path'] = $image_name;
         }
 
-        $book->update($request->except('authors', 'categories'));
+        $book->update($request->safe()->except('authors', 'categories'));
         $book->authors()->sync($request->authors);
         $book->categories()->sync($request->categories);
 

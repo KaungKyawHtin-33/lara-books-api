@@ -56,7 +56,7 @@ class AuthorController extends Controller
             abort(404);
         }
 
-        # Eager loading
+        # Eager loading for N+1 query
         $author->load('country');
 
         $author = [

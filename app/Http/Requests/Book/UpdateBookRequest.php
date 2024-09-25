@@ -29,6 +29,7 @@ class UpdateBookRequest extends FormRequest
             'image_path'    => 'file',
             'language'      => 'required|string|max:255',
             'publisher_id'  => 'required|exists:publishers,id',
+            'published_at'  => 'required|date',
             'genre_id'      => 'required|exists:genres,id',
             'created_by'    => 'required|exists:users,id',
             'updated_by'    => 'required|exists:users,id',
