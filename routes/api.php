@@ -16,4 +16,5 @@ Route::apiResource('/genres', GenreController::class);
 Route::apiResource('/publishers', PublisherController::class);
 Route::apiResource('/categories', CategoryController::class);
 Route::apiResource('/authors', AuthorController::class);
+Route::get('/books/search', [BookController::class, 'searchBooks'])->name('books.search');
 Route::apiResource('/books', BookController::class);

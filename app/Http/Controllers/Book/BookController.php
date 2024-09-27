@@ -7,9 +7,56 @@ use App\Http\Requests\Book\StoreBookRequest;
 use App\Http\Requests\Book\UpdateBookRequest;
 use App\Models\Book;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class BookController extends Controller
 {
+    /**
+     * Search books
+     */
+    public function searchBooks(Request $request)
+    {
+        $book = Book::whereNull('deleted_at')
+            ->where(function ($query) use ($request) {
+                $query->where('title', 'like', '%' . $request->title . '%')
+                    ->orWhere('description', 'like', '%' . $request->title . '%');
+            })
+            ->with(['publisher', 'genre', 'authors.country', 'categories'])
+            ->get()
+            ->map(function ($book) {
+                return [
+                    'id'            => $book->id,
+                    'title'         => $book->title,
+                    'description'   => $book->description,
+                    'price'         => $book->price,
+                    'stock'         => $book->stock,
+                    'image_path'    => $book->image_path,
+                    'language'      => $book->language,
+                    'publisher'     => $book->publisher->name,
+                    'genre'         => $book->genre->name,
+                    'published_at'  => $book->published_at,
+                    'categories'    => $book->categories->pluck('name'),
+                    'authors'       => $book->authors->map(function ($author) {
+                        return [
+                            'name'      => $author->name,
+                            'country'   => $author->country->name
+                        ];
+                    })
+                ];
+            });
+
+        if ($book->isEmpty()) {
+            return response()->json([
+                'book' => []
+            ], status: 404);
+        }
+
+        return response()->json([
+            'book'      => $book,
+            'message'   => "Show search of books"
+        ], 200);
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -106,7 +153,7 @@ class BookController extends Controller
 
         return response()->json([
             'book'      => $book,
-            'message'   => 'Show detail of ' . $book['title']
+            'message'   => "Show detail of {$book['title']}"
         ], 200);
     }
 
