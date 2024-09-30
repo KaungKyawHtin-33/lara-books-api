@@ -16,10 +16,19 @@ class BookController extends Controller
      */
     public function searchBooks(Request $request)
     {
+        if (!$request->hasAny(['title', 'language', 'publihser', 'genre']) &&
+            ($request->min_price != 1 || $request->max_price == 1) &&
+            ($request->max_price != 1 || $request->min_price == 1)) {
+            abort(404);
+        }
+
         $book = Book::whereNull('deleted_at')
-            ->where(function ($query) use ($request) {
-                $query->where('title', 'like', '%' . $request->title . '%')
-                    ->orWhere('description', 'like', '%' . $request->title . '%');
+            ->filter($request)
+            ->when($request->min_price == 1, function ($query) {
+                $query->orderBy('price');
+            })
+            ->when($request->max_price == 1, function ($query) {
+                $query->orderBy('price', 'desc');
             })
             ->with(['publisher', 'genre', 'authors.country', 'categories'])
             ->get()
@@ -53,7 +62,7 @@ class BookController extends Controller
 
         return response()->json([
             'book'      => $book,
-            'message'   => "Show search of books"
+            'message'   => 'Show search of books'
         ], 200);
     }
 
@@ -63,10 +72,7 @@ class BookController extends Controller
     public function index()
     {
         $books = Book::whereNull('deleted_at')
-            ->with('publisher')
-            ->with('genre')
-            ->with('authors')
-            ->with('categories')
+            ->with(['publisher', 'genre', 'authors.country', 'categories'])
             ->get()
             ->map(function ($book) {
                 return [
@@ -129,7 +135,7 @@ class BookController extends Controller
         }
 
         # Eager loading for N+1 query
-        $book->load(['publisher', 'genre', 'authors', 'categories']);
+        $book->load(['publisher', 'genre', 'authors.country', 'categories']);
 
         $book = [
             'id'            => $book->id,
