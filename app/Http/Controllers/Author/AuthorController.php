@@ -52,9 +52,7 @@ class AuthorController extends Controller
      */
     public function show(Author $author)
     {
-        if (!$author || $author->deleted_at != null) {
-            abort(404);
-        }
+        abort_if(!$author || $author->deleted_at != null, 404);
 
         # Eager loading for N+1 query
         $author->load('country');
@@ -78,9 +76,7 @@ class AuthorController extends Controller
      */
     public function update(UpdateAuthorRequest $request, Author $author)
     {
-        if (!$author || $author->deleted_at != null) {
-            abort(404);
-        }
+        abort_if(!$author || $author->deleted_at != null, 404);
 
         $author->update($request->validated());
 
@@ -92,9 +88,7 @@ class AuthorController extends Controller
      */
     public function destroy(Author $author)
     {
-        if (!$author || $author->deleted_at != null) {
-            abort(404);
-        }
+        abort_if(!$author || $author->deleted_at != null, 404);
 
         $author->update([
             'deleted_at' => Carbon::now()

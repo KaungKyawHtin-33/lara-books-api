@@ -41,9 +41,7 @@ class CategoryController extends Controller
      */
     public function show(Category $category)
     {
-        if (!$category || $category->deleted_at != null) {
-            abort(404);
-        }
+        abort_if(!$category || $category->deleted_at != null, 404);
 
         return response()->json([
             'categories'    => $category,
@@ -56,9 +54,7 @@ class CategoryController extends Controller
      */
     public function update(UpdateCategoryRequest $request, Category $category)
     {
-        if (!$category || $category->deleted_at != null) {
-            abort(404);
-        }
+        abort_if(!$category || $category->deleted_at != null, 404);
 
         $category->update($request->validated());
 
@@ -70,9 +66,7 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category)
     {
-        if (!$category || $category->deleted_at != null) {
-            abort(404);
-        }
+        abort_if(!$category || $category->deleted_at != null, 404);
 
         $category->update([
             'deleted_at' => Carbon::now()

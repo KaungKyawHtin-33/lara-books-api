@@ -41,14 +41,14 @@ class BookController extends Controller
                     'stock'         => $book->stock,
                     'image_path'    => $book->image_path,
                     'language'      => $book->language,
-                    'publisher'     => $book->publisher->name,
-                    'genre'         => $book->genre->name,
+                    'publisher'     => optional($book->publisher)->name ?? 'Unknown Publisher',
+                    'genre'         => optional($book->genre)->name ?? 'Unknown Genre',
                     'published_at'  => $book->published_at,
                     'categories'    => $book->categories->pluck('name'),
                     'authors'       => $book->authors->map(function ($author) {
                         return [
                             'name'      => $author->name,
-                            'country'   => $author->country->name
+                            'country'   => optional($author->country)->name ?? 'Unknown Country'
                         ];
                     })
                 ];
@@ -73,24 +73,27 @@ class BookController extends Controller
     {
         $books = Book::whereNull('deleted_at')
             ->with(['publisher', 'genre', 'authors.country', 'categories'])
+            ->withCount(['authors', 'categories'])
             ->get()
             ->map(function ($book) {
                 return [
-                    'id'            => $book->id,
-                    'title'         => $book->title,
-                    'description'   => $book->description,
-                    'price'         => $book->price,
-                    'stock'         => $book->stock,
-                    'image_path'    => $book->image_path,
-                    'language'      => $book->language,
-                    'publisher'     => $book->publisher->name,
-                    'genre'         => $book->genre->name,
-                    'published_at'  => $book->published_at,
-                    'categories'    => $book->categories->pluck('name'),
-                    'authors'       => $book->authors->map(function ($author) {
+                    'id'                => $book->id,
+                    'title'             => $book->title,
+                    'description'       => $book->description,
+                    'price'             => $book->price,
+                    'stock'             => $book->stock,
+                    'image_path'        => $book->image_path,
+                    'language'          => $book->language,
+                    'publisher'         => optional($book->publisher)->name ?? 'Unknown Publisher',
+                    'genre'             => optional($book->genre)->name ?? 'Unknown Genre',
+                    'published_at'      => $book->published_at,
+                    'categories_count'  => $book->categories_count,
+                    'categories'        => $book->categories->pluck('name'),
+                    'authors_count'     => $book->authors_count,
+                    'authors'           => $book->authors->map(function ($author) {
                         return [
                             'name'      => $author->name,
-                            'country'   => $author->country->name
+                            'country'   => optional($author->country)->name ?? 'Unknown Country'
                         ];
                     })
                 ];
@@ -145,14 +148,14 @@ class BookController extends Controller
             'stock'         => $book->stock,
             'image_path'    => $book->image_path,
             'language'      => $book->language,
-            'publisher'     => $book->publisher->name,
-            'genre'         => $book->genre->name,
+            'publisher'     => optional($book->publisher)->name ?? 'Unknown Publisher',
+            'genre'         => optional($book->genre)->name ?? 'Unknown Genre',
             'published_at'  => $book->published_at,
             'categories'    => $book->categories->pluck('name'),
             'authors'       => $book->authors->map(function ($author) {
                 return [
                     'name'      => $author->name,
-                    'country'   => $author->country->name
+                    'country'   => optional($author->country)->name ?? 'Unknown Country'
                 ];
             })
         ];
@@ -168,9 +171,7 @@ class BookController extends Controller
      */
     public function update(UpdateBookRequest $request, Book $book)
     {
-        if (!$book || $book->deleted_at != null) {
-            abort(404);
-        }
+        abort_if(!$book || $book->deleted_at != null, 404);
 
         if ($request->validated('image_path') && $request->hasFile('image_path')) {
             $file = $request->file('image_path');
@@ -192,9 +193,7 @@ class BookController extends Controller
      */
     public function destroy(Book $book)
     {
-        if (!$book || $book->deleted_at != null) {
-            abort(404);
-        }
+        abort_if(!$book || $book->deleted_at != null, 404);
 
         $book->update([
             'deleted_at' => Carbon::now()

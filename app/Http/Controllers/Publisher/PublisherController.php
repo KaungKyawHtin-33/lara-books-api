@@ -41,9 +41,7 @@ class PublisherController extends Controller
      */
     public function show(Publisher $publisher)
     {
-        if (!$publisher || $publisher->deleted_at != null) {
-            abort(404);
-        }
+        abort_if(!$publisher || $publisher->deleted_at != null, 404);
 
         return response()->json([
             'publisher' => $publisher,
@@ -56,9 +54,7 @@ class PublisherController extends Controller
      */
     public function update(UpdatePublisherRequest $request, Publisher $publisher)
     {
-        if (!$publisher || $publisher->deleted_at != null) {
-            abort(404);
-        }
+        abort_if(!$publisher || $publisher->deleted_at != null, 404);
 
         $publisher->update($request->validated());
 
@@ -70,9 +66,7 @@ class PublisherController extends Controller
      */
     public function destroy(Publisher $publisher)
     {
-        if (!$publisher || $publisher->deleted_at != null) {
-            abort(404);
-        }
+        abort_if(!$publisher || $publisher->deleted_at != null, 404);
 
         $publisher->update([
             'deleted_at' => Carbon::now()

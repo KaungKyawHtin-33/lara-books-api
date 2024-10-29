@@ -41,9 +41,7 @@ class GenreController extends Controller
      */
     public function show(Genre $genre)
     {
-        if (!$genre || $genre->deleted_at != null) {
-            abort(404);
-        }
+        abort_if(!$genre || $genre->deleted_at != null, 404);
 
         return response()->json([
             'genre'     => $genre,
@@ -56,9 +54,7 @@ class GenreController extends Controller
      */
     public function update(UpdateGenreRequest $request, Genre $genre)
     {
-        if (!$genre || $genre->deleted_at != null) {
-            abort(404);
-        }
+        abort_if(!$genre || $genre->deleted_at != null, 404);
 
         $genre->update($request->validated());
 
@@ -70,9 +66,7 @@ class GenreController extends Controller
      */
     public function destroy(Genre $genre)
     {
-        if (!$genre || $genre->deleted_at != null) {
-            abort(404);
-        }
+        abort_if(!$genre || $genre->deleted_at != null, 404);
 
         $genre->update([
             'deleted_at' => Carbon::now()
